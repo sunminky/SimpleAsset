@@ -1,16 +1,23 @@
 import org.hyperledger.fabric.shim.ChaincodeBase;
 import org.hyperledger.fabric.shim.ChaincodeStub;
 
+import java.rmi.StubNotFoundException;
+import java.security.KeyException;
 import java.util.HashMap;
 import java.util.List;
 
 public class MyChainCode extends ChaincodeBase{
     @Override
     public Response init(ChaincodeStub stub) {
-        byte[] isAdminExist = stub.getState("admin");
+        try {
+            byte[] isAdminExist = stub.getState("admin");
 
-        if (isAdminExist.length == 0)
-            stub.putStringState("admin", "0");
+            if (isAdminExist.length == 0)
+                stub.putStringState("admin", "0");
+        }
+        catch (Exception e){
+            return newErrorResponse("[init] Init Failed\n");
+        }
 
         return newSuccessResponse();
     }
@@ -23,7 +30,7 @@ public class MyChainCode extends ChaincodeBase{
         methodDictionary.put("remit", 1);
         methodDictionary.put("balance_check", 2);
         methodDictionary.put("money_issuance", 3);
-        methodDictionary.put("delete_account", 3);
+        methodDictionary.put("delete_account", 4);
 
         switch (methodDictionary.get(stub.getFunction())){
             // Account Opening
@@ -110,6 +117,13 @@ public class MyChainCode extends ChaincodeBase{
 
         if(requiedArgsNum != args.size())
             return newErrorResponse("[delete account] Usage : delete_account <user>\n");
+
+        try {
+            stub.delState(args.get(0));
+        }
+        catch (Exception e){
+            return newErrorResponse(String.format("[delete account] delete %d failed :\n", args.get(0)));
+        }
 
         return newSuccessResponse(String.format("[delete account] %s successfully deleted~!\n", args.get(0)));
     }
