@@ -23,6 +23,7 @@ public class MyChainCode extends ChaincodeBase{
         methodDictionary.put("remit", 1);
         methodDictionary.put("balance_check", 2);
         methodDictionary.put("money_issuance", 3);
+        methodDictionary.put("delete_account", 3);
 
         switch (methodDictionary.get(stub.getFunction())){
             // Account Opening
@@ -37,6 +38,9 @@ public class MyChainCode extends ChaincodeBase{
             // Money Issuance
             case 3:
                 return this.moneyIssuance(stub);
+            // Delete Account
+            case 4:
+                return this.deleteAccount(stub);
         }
 
         return newErrorResponse("Invoke Failed\n");
@@ -47,7 +51,10 @@ public class MyChainCode extends ChaincodeBase{
         List<String> args = stub.getParameters();
         final int requiedArgsNum = 2;
 
-        return null;
+        if(requiedArgsNum != args.size())
+            return newErrorResponse("[create account] Usage : create_account <user> <deposit>\n");
+
+        return newSuccessResponse(String.format("[create account] %s created ~!\n", args.get(0)));
     }
 
     private Response remit(ChaincodeStub stub){
@@ -55,7 +62,10 @@ public class MyChainCode extends ChaincodeBase{
         List<String> args = stub.getParameters();
         final int requiedArgsNum = 3;
 
-        return null;
+        if(requiedArgsNum != args.size())
+            return newErrorResponse("[remit] Usage : remit <user1> <user2> <amount>\n");
+
+        return newSuccessResponse(String.format("[remit] %s -(%s)-> %s~!\n", args.get(0), args.get(2), args.get(1)));
     }
 
     private Response balanceCheck(ChaincodeStub stub){
@@ -63,7 +73,10 @@ public class MyChainCode extends ChaincodeBase{
         List<String> args = stub.getParameters();
         final int requiedArgsNum = 1;
 
-        return null;
+        if(requiedArgsNum != args.size())
+            return newErrorResponse("[balance check] Usage : balance_check <user>\n");
+
+        return newSuccessResponse(String.format("[balance check] check %s ~!\n", args.get(0)));
     }
 
     private Response moneyIssuance(ChaincodeStub stub){
@@ -88,6 +101,17 @@ public class MyChainCode extends ChaincodeBase{
         }
 
         return newSuccessResponse("[money issuance] money issuance success~!\n");
+    }
+
+    private Response deleteAccount(ChaincodeStub stub) {
+        // Usage : delete_account <user>
+        List<String> args = stub.getParameters();
+        final int requiedArgsNum = 1;
+
+        if(requiedArgsNum != args.size())
+            return newErrorResponse("[delete account] Usage : delete_account <user>\n");
+
+        return newSuccessResponse(String.format("[delete account] %s successfully deleted~!\n", args.get(0)));
     }
 
     public static void main(String[] args) {
