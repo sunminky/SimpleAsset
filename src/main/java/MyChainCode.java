@@ -1,18 +1,17 @@
+import com.google.protobuf.ByteString;
 import org.hyperledger.fabric.shim.ChaincodeBase;
 import org.hyperledger.fabric.shim.ChaincodeStub;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.rmi.StubNotFoundException;
-import java.security.KeyException;
 import java.util.HashMap;
 import java.util.List;
 
-public class MyChainCode extends ChaincodeBase{
+// @SuppressWarnings("deprecation")
+public class MyChainCode extends ChaincodeBase {
     @Override
     public Response init(ChaincodeStub stub) {
         try {
-            byte[] isAdminExist = stub.getState("admin");
-
-            if (isAdminExist.length == 0)
+            if (stub.getStringState("admin") == null)
                 stub.putStringState("admin", "0");
         }
         catch (Exception e){
@@ -56,10 +55,31 @@ public class MyChainCode extends ChaincodeBase{
     private Response createAccount(ChaincodeStub stub){
         // Usage : create_account <user> <deposit>
         List<String> args = stub.getParameters();
-        final int requiedArgsNum = 2;
+        final int requiredArgsNum = 2;
 
-        if(requiedArgsNum != args.size())
+        if(requiredArgsNum != args.size())
             return newErrorResponse("[create account] Usage : create_account <user> <deposit>\n");
+
+        try {
+            String val1 = stub.getStringState(args.get(0));
+            int amount = Integer.parseInt(args.get(1));
+
+            if (amount < 0){
+                throw new NumberFormatException();
+            }
+
+            if(val1 != null){
+                throw new RuntimeException("[create account] amount must greater than 0\n");
+            }
+
+            stub.putStringState(val1, Integer.toString(amount));
+        }
+        catch (NumberFormatException e){
+
+        }
+        catch (Exception e) {
+
+        }
 
         return newSuccessResponse(String.format("[create account] %s created ~!\n", args.get(0)));
     }
@@ -67,31 +87,55 @@ public class MyChainCode extends ChaincodeBase{
     private Response remit(ChaincodeStub stub){
         // Usage : remit <user1> <user2> <amount>
         List<String> args = stub.getParameters();
-        final int requiedArgsNum = 3;
+        final int requiredArgsNum = 3;
 
-        if(requiedArgsNum != args.size())
+        if(requiredArgsNum != args.size())
             return newErrorResponse("[remit] Usage : remit <user1> <user2> <amount>\n");
 
-        return newSuccessResponse(String.format("[remit] %s -(%s)-> %s~!\n", args.get(0), args.get(2), args.get(1)));
+        try {
+            String val1 = stub.getStringState(args.get(0));
+            String val2 = stub.getStringState(args.get(1));
+
+            if (val1 == null)
+                return newErrorResponse(String.format("[remit] Error: state for %s is null", args.get(0)));
+
+            if (val2 == null)
+                return newErrorResponse(String.format("[remit] Error: state for %s is null", args.get(1)));
+
+            return newSuccessResponse(String.format("[remit] %s -> %s successfully remitted~!\n", val1, val2));
+        }
+        catch (Exception e){
+            return newSuccessResponse(String.format("[remit] %s -(%s)-> %s~!\n", args.get(0), args.get(2), args.get(1)));
+        }
     }
 
     private Response balanceCheck(ChaincodeStub stub){
         // Usage : balance_check <user>
         List<String> args = stub.getParameters();
-        final int requiedArgsNum = 1;
+        final int requiredArgsNum = 1;
 
-        if(requiedArgsNum != args.size())
+        if(requiredArgsNum != args.size())
             return newErrorResponse("[balance check] Usage : balance_check <user>\n");
 
-        return newSuccessResponse(String.format("[balance check] check %s ~!\n", args.get(0)));
+        try {
+            String val = stub.getStringState(args.get(0));
+
+            if (val == null)
+                return newErrorResponse(String.format("[balance check] Error: state for %s is null", args.get(0)));
+
+            return newSuccessResponse(val, ByteString.copyFrom(val, UTF_8).toByteArray());
+        }
+        catch (Exception e){
+            return newErrorResponse(String.format("[balance check] %s balance check failed :\n", args.get(0)));
+        }
     }
 
     private Response moneyIssuance(ChaincodeStub stub){
         // Usage : money_issuance <amount>
         List<String> args = stub.getParameters();
-        final int requiedArgsNum = 1;
+        final int requiredArgsNum = 1;
 
-        if(requiedArgsNum != args.size())
+        if(requiredArgsNum != args.size())
             return newErrorResponse("[money issuance] Usage : money_issuance <amount>\n");
 
         try {
@@ -113,9 +157,9 @@ public class MyChainCode extends ChaincodeBase{
     private Response deleteAccount(ChaincodeStub stub) {
         // Usage : delete_account <user>
         List<String> args = stub.getParameters();
-        final int requiedArgsNum = 1;
+        final int requiredArgsNum = 1;
 
-        if(requiedArgsNum != args.size())
+        if(requiredArgsNum != args.size())
             return newErrorResponse("[delete account] Usage : delete_account <user>\n");
 
         try {
