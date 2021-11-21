@@ -18,7 +18,7 @@ public class MyChainCode extends ChaincodeBase {
             return newErrorResponse("[init] Init Failed\n");
         }
 
-        return newSuccessResponse();
+        return newSuccessResponse("[init] Init Success\n");
     }
 
     @Override
@@ -49,7 +49,7 @@ public class MyChainCode extends ChaincodeBase {
                 return this.deleteAccount(stub);
         }
 
-        return newErrorResponse("Invoke Failed\n");
+        return newErrorResponse(String.format("[Invoke] %s are not supported\n", stub.getFunction()));
     }
 
     private Response createAccount(ChaincodeStub stub){
@@ -61,24 +61,24 @@ public class MyChainCode extends ChaincodeBase {
             return newErrorResponse("[create account] Usage : create_account <user> <deposit>\n");
 
         try {
-            String val1 = stub.getStringState(args.get(0));
+            String user = args.get(0);
             int amount = Integer.parseInt(args.get(1));
 
             if (amount < 0){
-                throw new NumberFormatException();
+                throw new NumberFormatException("amount must greater than 0");
             }
 
-            if(val1 != null){
-                throw new RuntimeException("[create account] amount must greater than 0\n");
+            if(stub.getStringState(user) != null){
+                throw new RuntimeException(String.format("%s already exist", user));
             }
 
-            stub.putStringState(val1, Integer.toString(amount));
+            stub.putStringState(user, Integer.toString(amount));
         }
         catch (NumberFormatException e){
-
+            return newErrorResponse(String.format("[create account] %s\n", e));
         }
         catch (Exception e) {
-
+            return newErrorResponse(String.format("[create account] %s\n", e));
         }
 
         return newSuccessResponse(String.format("[create account] %s created ~!\n", args.get(0)));
@@ -88,46 +88,65 @@ public class MyChainCode extends ChaincodeBase {
         // Usage : remit <user1> <user2> <amount>
         List<String> args = stub.getParameters();
         final int requiredArgsNum = 3;
+        String sender = null;
+        String receiver = null;
+        int remittanceAmount = 0, senderBalance = 0, receiverBalance = 0;
 
         if(requiredArgsNum != args.size())
             return newErrorResponse("[remit] Usage : remit <user1> <user2> <amount>\n");
 
         try {
-            String val1 = stub.getStringState(args.get(0));
-            String val2 = stub.getStringState(args.get(1));
+            sender = args.get(0);
+            receiver = args.get(1);
+            remittanceAmount = Integer.parseInt(args.get(2));
+            senderBalance = Integer.parseInt(stub.getStringState(sender));  // 송금자 잔고
+            receiverBalance = Integer.parseInt(stub.getStringState(receiver));    // 수신자 잔고
 
-            if (val1 == null)
-                return newErrorResponse(String.format("[remit] Error: state for %s is null", args.get(0)));
+            if (stub.getStringState(sender) == null)
+                return newErrorResponse(String.format("[remit] Error: state for %s is null", sender));
 
-            if (val2 == null)
-                return newErrorResponse(String.format("[remit] Error: state for %s is null", args.get(1)));
+            if (stub.getStringState(receiver) == null)
+                return newErrorResponse(String.format("[remit] Error: state for %s is null", receiver));
 
-            return newSuccessResponse(String.format("[remit] %s -> %s successfully remitted~!\n", val1, val2));
+            if(remittanceAmount < 0)
+                throw new NumberFormatException("amount must greater than 0");
+
+            if(senderBalance < remittanceAmount)
+                throw new RuntimeException("remittance amount must greater than balance");
+
+            stub.putStringState(sender, Integer.toString(senderBalance - remittanceAmount));
+            stub.putStringState(receiver, Integer.toString(receiverBalance + remittanceAmount));
+        }
+        catch (NumberFormatException e){
+            return newErrorResponse(String.format("[remit] %s\n", e));
         }
         catch (Exception e){
-            return newSuccessResponse(String.format("[remit] %s -(%s)-> %s~!\n", args.get(0), args.get(2), args.get(1)));
+            return newErrorResponse(String.format("[remit] %s -(%s)-> %s fauled\n", sender, remittanceAmount, receiver));
         }
+
+        return newSuccessResponse(String.format("[remit] %s -> %s successfully remitted~!\n", sender, receiver));
     }
 
     private Response balanceCheck(ChaincodeStub stub){
         // Usage : balance_check <user>
         List<String> args = stub.getParameters();
         final int requiredArgsNum = 1;
+        String balance = null;
 
         if(requiredArgsNum != args.size())
             return newErrorResponse("[balance check] Usage : balance_check <user>\n");
 
         try {
-            String val = stub.getStringState(args.get(0));
+            balance = stub.getStringState(args.get(0));
 
-            if (val == null)
+            if (balance == null)
                 return newErrorResponse(String.format("[balance check] Error: state for %s is null", args.get(0)));
-
-            return newSuccessResponse(val, ByteString.copyFrom(val, UTF_8).toByteArray());
         }
         catch (Exception e){
             return newErrorResponse(String.format("[balance check] %s balance check failed :\n", args.get(0)));
         }
+
+        return newSuccessResponse(balance, ByteString.copyFrom(balance, UTF_8).toByteArray());
     }
 
     private Response moneyIssuance(ChaincodeStub stub){
@@ -139,10 +158,10 @@ public class MyChainCode extends ChaincodeBase {
             return newErrorResponse("[money issuance] Usage : money_issuance <amount>\n");
 
         try {
-            int remain = Integer.parseInt(stub.getState("admin").toString());
+            int remain = Integer.parseInt(stub.getStringState("admin"));
             int issuanceAmount = Integer.parseInt(args.get(0));
 
-            stub.putStringState("admin", new Integer(remain + issuanceAmount).toString());
+            stub.putStringState("admin", Integer.toString(remain + issuanceAmount));
         }
         catch (NumberFormatException e){
             return newErrorResponse("[money issuance] invalid argument\n");
