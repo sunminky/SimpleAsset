@@ -1,4 +1,7 @@
 import com.google.protobuf.ByteString;
+import io.netty.util.internal.StringUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hyperledger.fabric.shim.ChaincodeBase;
 import org.hyperledger.fabric.shim.ChaincodeStub;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -8,10 +11,15 @@ import java.util.List;
 
 // @SuppressWarnings("deprecation")
 public class MyChainCode extends ChaincodeBase {
+
+    private static Log _logger = LogFactory.getLog(MyChainCode.class);
+
     @Override
     public Response init(ChaincodeStub stub) {
+        _logger.info("Init java simple chaincode");
+
         try {
-            if (stub.getStringState("admin") == null)
+            if (StringUtil.isNullOrEmpty(stub.getStringState("admin")))
                 stub.putStringState("admin", "0");
         }
         catch (Exception e){
@@ -31,22 +39,30 @@ public class MyChainCode extends ChaincodeBase {
         methodDictionary.put("money_issuance", 3);
         methodDictionary.put("delete_account", 4);
 
-        switch (methodDictionary.get(stub.getFunction())){
-            // Account Opening
-            case 0:
-                return this.createAccount(stub);
-            // Remit
-            case 1:
-                return this.remit(stub);
-            // Balance Checking
-            case 2:
-                return this.balanceCheck(stub);
-            // Money Issuance
-            case 3:
-                return this.moneyIssuance(stub);
-            // Delete Account
-            case 4:
-                return this.deleteAccount(stub);
+        try {
+            switch (methodDictionary.get(stub.getFunction())){
+                // Account Opening
+                case 0:
+                    return this.createAccount(stub);
+                // Remit
+                case 1:
+                    return this.remit(stub);
+                // Balance Checking
+                case 2:
+                    return this.balanceCheck(stub);
+                // Money Issuance
+                case 3:
+                    return this.moneyIssuance(stub);
+                // Delete Account
+                case 4:
+                    return this.deleteAccount(stub);
+            }
+        }
+        catch (NullPointerException e){
+
+        }
+        catch (Exception e){
+
         }
 
         return newErrorResponse(String.format("[Invoke] %s are not supported\n", stub.getFunction()));
@@ -68,7 +84,7 @@ public class MyChainCode extends ChaincodeBase {
                 throw new NumberFormatException("amount must greater than 0");
             }
 
-            if(stub.getStringState(user) != null){
+            if(StringUtil.isNullOrEmpty(stub.getStringState(user))){
                 throw new RuntimeException(String.format("%s already exist", user));
             }
 
@@ -88,24 +104,24 @@ public class MyChainCode extends ChaincodeBase {
         // Usage : remit <user1> <user2> <amount>
         List<String> args = stub.getParameters();
         final int requiredArgsNum = 3;
-        String sender = null;
-        String receiver = null;
+        String sender, receiver;
         int remittanceAmount = 0, senderBalance = 0, receiverBalance = 0;
 
         if(requiredArgsNum != args.size())
             return newErrorResponse("[remit] Usage : remit <user1> <user2> <amount>\n");
 
-        try {
-            sender = args.get(0);
-            receiver = args.get(1);
-            remittanceAmount = Integer.parseInt(args.get(2));
-            senderBalance = Integer.parseInt(stub.getStringState(sender));  // 송금자 잔고
-            receiverBalance = Integer.parseInt(stub.getStringState(receiver));    // 수신자 잔고
+        sender = args.get(0);
+        receiver = args.get(1);
 
-            if (stub.getStringState(sender) == null)
+        try {
+            remittanceAmount = Integer.parseInt(args.get(2));
+            senderBalance = Integer.parseInt(stub.getStringState(sender));
+            receiverBalance = Integer.parseInt(stub.getStringState(receiver));
+
+            if (StringUtil.isNullOrEmpty(stub.getStringState(sender)))
                 return newErrorResponse(String.format("[remit] Error: state for %s is null", sender));
 
-            if (stub.getStringState(receiver) == null)
+            if (StringUtil.isNullOrEmpty(stub.getStringState(receiver)))
                 return newErrorResponse(String.format("[remit] Error: state for %s is null", receiver));
 
             if(remittanceAmount < 0)
@@ -131,7 +147,7 @@ public class MyChainCode extends ChaincodeBase {
         // Usage : balance_check <user>
         List<String> args = stub.getParameters();
         final int requiredArgsNum = 1;
-        String balance = null;
+        String balance;
 
         if(requiredArgsNum != args.size())
             return newErrorResponse("[balance check] Usage : balance_check <user>\n");
@@ -139,7 +155,7 @@ public class MyChainCode extends ChaincodeBase {
         try {
             balance = stub.getStringState(args.get(0));
 
-            if (balance == null)
+            if (StringUtil.isNullOrEmpty(balance))
                 return newErrorResponse(String.format("[balance check] Error: state for %s is null", args.get(0)));
         }
         catch (Exception e){
@@ -194,5 +210,7 @@ public class MyChainCode extends ChaincodeBase {
     public static void main(String[] args) {
         System.out.println("Hello ChainCode\n");
         System.out.println("This is Main\n");
+
+        new MyChainCode().start(args);
     }
 }
