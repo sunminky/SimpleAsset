@@ -59,10 +59,10 @@ public class MyChainCode extends ChaincodeBase {
             }
         }
         catch (NullPointerException e){
-
+            return newErrorResponse(String.format("[Invoke] %s are not supported\n", stub.getFunction()));
         }
         catch (Exception e){
-
+            return newErrorResponse(String.format("[Invoke] %s failed\n", stub.getFunction()));
         }
 
         return newErrorResponse(String.format("[Invoke] %s are not supported\n", stub.getFunction()));
@@ -84,7 +84,7 @@ public class MyChainCode extends ChaincodeBase {
                 throw new NumberFormatException("amount must greater than 0");
             }
 
-            if(StringUtil.isNullOrEmpty(stub.getStringState(user))){
+            if(!StringUtil.isNullOrEmpty(stub.getStringState(user))){
                 throw new RuntimeException(String.format("%s already exist", user));
             }
 
@@ -174,19 +174,18 @@ public class MyChainCode extends ChaincodeBase {
             return newErrorResponse("[money issuance] Usage : money_issuance <amount>\n");
 
         try {
-            int remain = Integer.parseInt(stub.getStringState("admin"));
-            int issuanceAmount = Integer.parseInt(args.get(0));
+            int issuanceAmount = Integer.parseInt(args.get(0)) + Integer.parseInt(stub.getStringState("admin"));
 
-            stub.putStringState("admin", Integer.toString(remain + issuanceAmount));
+            stub.putStringState("admin", Integer.toString(issuanceAmount));
         }
         catch (NumberFormatException e){
             return newErrorResponse("[money issuance] invalid argument\n");
         }
         catch (Exception e){
-            return newErrorResponse("[money issuance] money issuance failed :(\n");
+            return newErrorResponse("[money issuance] money issuance failed\n");
         }
 
-        return newSuccessResponse("[money issuance] money issuance success~!\n");
+        return newSuccessResponse();
     }
 
     private Response deleteAccount(ChaincodeStub stub) {
