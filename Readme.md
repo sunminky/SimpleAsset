@@ -16,6 +16,7 @@ peer chaincode invoke -o orderer.example.com:7050 --tls true --cafile /opt/gopat
 peer chaincode invoke -o orderer.example.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C mychannel -n mycc2 -c '{"Args":["remit","admin","user1","100"]}'
 
 # 참고자료
+```
 hyperledger@hyperledger:~/fabric-samples/first-network$ ./byfn.sh up -l java
 Starting for channel 'mychannel' with CLI timeout of '10' seconds and CLI delay of '3' seconds
 Continue? [Y/n] y
@@ -245,3 +246,4 @@ Attempting to Query peer1.org2 ...3 secs
 |  _|   |  \| | | | | |
 | |___  | |\  | | |_| |
 |_____| |_| \_| |____/
+```
