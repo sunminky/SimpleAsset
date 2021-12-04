@@ -1,3 +1,4 @@
+const axios = require("axios");
 const express = require("express")
 const app = express()
 const port = 80;
@@ -6,6 +7,7 @@ const identityServer = "http://identityserver.com"
 const financeServer = "http://financeserver.com"
 
 app.use(express.json())
+app.use(express.urlencoded({extended: false}))
 
 /*
 * ## 회원가입
@@ -25,7 +27,36 @@ http://rootapiserver.com/register
     },
 }
 * */
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
+    // 회원 정보 hyperledger indy 네트워크에 저장
+    /*const request_body = {
+        username: req.body.username,
+        deposit: req.body.deposit,
+        userinfo: req.body.userinfo,
+    };
+    const headers =  {
+        'Content-Type': 'application/json',
+    };
+    const result = await axios.post(identityServer + "/register",request_body,{
+        headers:headers
+    })
+
+    console.log(result.data)*/
+
+    //hyperledger fabric에 계좌 생성
+    /*const request_body = {
+        username: req.body.username,
+        deposit: req.body.deposit,
+        userinfo: req.body.userinfo,
+    };
+    const headers =  {
+        'Content-Type': 'application/json',
+    };
+    const result = await axios.post(financeServer + "/create_server",request_body,{
+        headers:headers
+    })
+    console.log(result.data)*/
+
     console.log(req.body)
     return res.json({hello: "hello post"})
 })
