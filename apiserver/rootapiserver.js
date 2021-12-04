@@ -1,7 +1,7 @@
 const axios = require("axios");
 const express = require("express")
 const app = express()
-const port = 80;
+const port = 8080;
 
 const identityServer = "http://identityserver.com"
 const financeServer = "http://financeserver.com"
@@ -45,14 +45,13 @@ app.post("/register", async (req, res) => {
 
     //hyperledger fabric에 계좌 생성
     /*const request_body = {
-        username: req.body.username,
+        user: userid,
         deposit: req.body.deposit,
-        userinfo: req.body.userinfo,
     };
     const headers =  {
         'Content-Type': 'application/json',
     };
-    const result = await axios.post(financeServer + "/create_server",request_body,{
+    const result = await axios.post(financeServer + "/createaccount",request_body,{
         headers:headers
     })
     console.log(result.data)*/
