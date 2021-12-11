@@ -4,7 +4,8 @@ const app = express()
 const port = 8080;
 
 const identityServer = "http://identityserver.com"
-const financeServer = "http://financeserver.com"
+// const financeServer = "http://financeserver.com"
+const financeServer = "http://127.0.0.1:8081"
 
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
@@ -16,7 +17,7 @@ http://rootapiserver.com/register
 1-1. 고유 회원번호 발급
 2. hyperledger fabric에 계좌 생성
 파라메터 {
-    userName : 'Alice',
+    name : 'Alice',
     deposit : '0',
     userinfo: {
     ...
@@ -30,7 +31,7 @@ http://rootapiserver.com/register
 app.post("/register", async (req, res) => {
     // 회원 정보 hyperledger indy 네트워크에 저장
     /*const request_body = {
-        username: req.body.username,
+        name: req.body.username,
         deposit: req.body.deposit,
         userinfo: req.body.userinfo,
     };
@@ -44,8 +45,8 @@ app.post("/register", async (req, res) => {
     console.log(result.data)*/
 
     //hyperledger fabric에 계좌 생성
-    /*const request_body = {
-        user: userid,
+    const request_body = {
+        name: req.body.username,
         deposit: req.body.deposit,
     };
     const headers =  {
@@ -54,10 +55,8 @@ app.post("/register", async (req, res) => {
     const result = await axios.post(financeServer + "/createaccount",request_body,{
         headers:headers
     })
-    console.log(result.data)*/
 
-    console.log(req.body)
-    return res.json({hello: "hello post"})
+    return res.json({msg: result})
 })
 
 /*
@@ -95,10 +94,10 @@ http://rootapiserver.com/remit
     },
 }
 * */
-app.post("/register", (req, res) => {
+/*app.post("/register", (req, res) => {
     console.log(req.body)
     return res.json({hello: "hello post"})
-})
+})*/
 
 /*
 * ## 충전
@@ -115,10 +114,10 @@ http://rootapiserver.com/recharge
     },
 }
 * */
-app.post("/register", (req, res) => {
+/*app.post("/register", (req, res) => {
     console.log(req.body)
     return res.json({hello: "hello post"})
-})
+})*/
 
 /*
 * ## 환불
@@ -134,14 +133,14 @@ http://rootapiserver.com/refund
     },
 }
 * */
-app.post("/register", (req, res) => {
+/*app.post("/register", (req, res) => {
     console.log(req.body)
     return res.json({hello: "hello post"})
-})
+})*/
 
 /*
 * ## 잔액조회
-http://rootapiserver.com/balancecheck
+http://rootapiserver.com/balance_check
 1. hyperledger indy 네트워크에서 고유 회원번호 획득
 2. user 계좌잔고 반환
 파라메터 {
@@ -152,9 +151,18 @@ http://rootapiserver.com/balancecheck
     },
 }
 * */
-app.post("/register", (req, res) => {
-    console.log(req.body)
-    return res.json({hello: "hello post"})
+app.post("/balance_check", async (req, res) => {
+    const request_body = {
+        name: req.body.username,
+    };
+    const headers =  {
+        'Content-Type': 'application/json',
+    };
+    const result = await axios.post(financeServer + "/balance_check",request_body,{
+        headers:headers
+    })
+
+    return res.json({msg: result})
 })
 
 /*
@@ -171,10 +179,10 @@ http://rootapiserver.com/resign
     },
 }
 * */
-app.delete("/register", (req, res) => {
+/*app.delete("/register", (req, res) => {
     console.log(req.body)
     return res.json({hello: "hello post"})
-})
+})*/
 
 app.listen(port, () => console.log("서버 실행됨"))
 
