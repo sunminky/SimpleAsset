@@ -45,8 +45,9 @@ app.post("/register", async (req, res) => {
     console.log(result.data)*/
 
     //hyperledger fabric에 계좌 생성
+
     const request_body = {
-        name: req.body.username,
+        name: req.body.name,
         deposit: req.body.deposit,
     };
     const headers =  {
@@ -56,7 +57,7 @@ app.post("/register", async (req, res) => {
         headers:headers
     })
 
-    return res.json({msg: result})
+    return res.json({msg: result.data.msg})
 })
 
 /*
@@ -153,7 +154,7 @@ http://rootapiserver.com/balance_check
 * */
 app.post("/balance_check", async (req, res) => {
     const request_body = {
-        name: req.body.username,
+        name: req.body.name,
     };
     const headers =  {
         'Content-Type': 'application/json',
@@ -162,7 +163,7 @@ app.post("/balance_check", async (req, res) => {
         headers:headers
     })
 
-    return res.json({msg: result})
+    return res.json({msg: result.data.msg})
 })
 
 /*
@@ -184,5 +185,5 @@ http://rootapiserver.com/resign
     return res.json({hello: "hello post"})
 })*/
 
-app.listen(port, () => console.log("서버 실행됨"))
+app.listen(port, () => console.log(`http://127.0.0.1:${port} start`))
 

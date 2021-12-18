@@ -40,10 +40,11 @@ const main = async function main(name) {
         // changeCarOwner transaction - requires 2 args , ex: ('changeCarOwner', 'CAR10', 'Dave')
         const result = await contract.submitTransaction("balance_check", name);
         console.log(`Transaction has been submitted. result is: ${result.toString()}`);
-        return `Transaction has been submitted. result is: ${result.toString()}`
 
         // Disconnect from the gateway.
         await gateway.disconnect();
+
+        return `Transaction has been submitted. result is: ${result.toString()}`
 
     } catch (error) {
         console.error(`Failed to submit transaction: ${error}`);

@@ -36,8 +36,6 @@ app.post("/createaccount", async (req, res) => {
 app.post("/balance_check", async (req, res) => {
     let msg;
 
-    console.log(req.body)
-
     if("name" in req.body){
         msg = await balance_check(req.body.name)
     }
