@@ -30,6 +30,7 @@ RUN apt-get update -y && apt-get install -y \
 	indy-plenum=1.13.0~dev1021 \
 	libindy=1.15.0~1536-xenial \
 	indy-cli=1.15.0~1536-xenial
+RUN pip3 install --upgrade --ignore-installed pip setuptools
 RUN pip3 install python3-indy
 USER indy
 WORKDIR /home/indy

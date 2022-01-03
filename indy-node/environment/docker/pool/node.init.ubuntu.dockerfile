@@ -20,6 +20,7 @@ RUN echo "logLevel=0" >> /etc/indy/indy_config.py
 RUN echo " " >> /etc/indy/indy_config.py
 
 # Init indy-node
+RUN python3 -m pip install pip==9.0.3
 RUN init_indy_node $nodename $nip $nport $cip $cport
 EXPOSE $nport $cport
 RUN if [ ! -z "$ips" ] && [ ! -z "$nodenum" ] && [ ! -z "$nodecnt" ]; then generate_indy_pool_transactions --nodes $nodecnt --clients $clicnt --nodeNum $nodenum --ips "$ips"; fi
